@@ -1,5 +1,5 @@
-# Bot.py
-# Class to create a Twitch Bot
+# ChatBot.py
+# Class to create a Twitch ChatBot
 
 import socket
 import re
