@@ -2,7 +2,7 @@
 # Stores data of a character in Tibia.
 
 class Character:
-    def __init__(self, name, level, world, voc, sex, achievement, residence, guild):
+    def __init__(self, name, level="", world="", voc="", sex="", achievement="", residence="", guild=""):
         self.name = name
         self.level = level
         self.world = world

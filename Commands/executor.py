@@ -44,7 +44,8 @@ class Executor:
             # function corresponding to command
             fn = getattr(commands, command, None)
             if callable(fn):
-                fn(bot, message.user, attributes)
+                t1 = Thread(target=fn(bot, message.user, attributes), args=(self,))
+                t1.start()
             else:
                 print("ERROR: Couldn't find corresponding function to command \"" + command + "\".")
         else:

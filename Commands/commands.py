@@ -1,7 +1,7 @@
 # commands.py
 # Class that holds all possible chat commands
 
-from Crawler.crawler import Crawler
+from Crawler import charCrawler
 from TibiaObjects.character import Character
 
 class Commands:
@@ -19,15 +19,17 @@ class Commands:
 
     def lookUpCharacter (bot, user, attributes):
         name = (" ").join(attributes)
-        char = Character(name,"","","","","","","")
-        crawler = Crawler
-        crawler.runSpider(char)
-        bot.whisper(user,
-                    "Name: " + char.name +
-                    ", Sex: " + char.sex +
-                    ", Vocation: " + char.voc +
-                    ", Level: " + char.level +
-                    ", Achievement Points: " + char.achievement +
-                    ", World: " + char.world +
-                    ", Residence: " + char.residence +
-                    ", Guild Membership: " + char.guild)
+        print("Starting")
+        char = charCrawler.crawl(name)
+        if char:
+            bot.whisper(user,
+                        "Name: " + char.name +
+                        ", Sex: " + char.sex +
+                        ", Vocation: " + char.voc +
+                        ", Level: " + char.level +
+                        ", Achievement Points: " + char.achievement +
+                        ", World: " + char.world +
+                        ", Residence: " + char.residence +
+                        ", Guild Membership: " + char.guild)
+        else:
+            bot.whisper(user, "Character " + name + " not found. Please check if the name is correct.")
