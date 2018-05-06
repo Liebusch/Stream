@@ -1,0 +1,289 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Stream Overlay</title>
+	<script src="jquery-3.3.1.js"></script>
+	
+	<script type="text/javascript">
+		var updating = false;
+		var xmlRequest = new XMLHttpRequest();
+		var timeNew, timeOld;
+		
+		// main function
+		(function() {
+            xmlRequest.overrideMimeType('text/xml');
+            // update overlays repeatdly
+			update();
+            setInterval(function() { update(); }, 1000);
+        })();
+     
+		// updates all overlays
+        function update() {
+			// if update is running, do nothing
+			if (updating) return;
+			// XML request of setup.xml
+			// setup.xml defines all overlays
+            xmlRequest.open("GET","Setup.xml");
+            xmlRequest.onreadystatechange = function() {
+                if(xmlRequest.status == 200 && xmlRequest.readyState == 4){
+                    // xml request was successful
+					xmlResponse = xmlRequest.responseXML;
+					
+					// only update if time stamp has changed
+					timeOld = timeNew;
+                    timeNew = xmlResponse.getElementsByTagName("time")[0].childNodes[0].nodeValue;
+					
+					if (!(timeOld == timeNew)){
+						// update all overlays
+						updateImages();
+					}
+                    
+                }
+            };
+            xmlRequest.send();
+        }
+		
+		
+		function updateImages()
+		{
+			// array containing all image information in setup.xml
+			var images = xmlResponse.getElementsByTagName("image");
+			// ids in new array, used to check which displayed images
+			// need to be deleted
+			var ids = new Array();
+			
+			// iterate through all images and display them
+			for (var i=0; i<images.length; i++){
+				var id = images[i].getElementsByTagName("id")[0].textContent;
+				ids[i] = id;
+				
+				// image doesn't exist yet and needs to be created
+				if($('#'+id).length==0){
+					var img = document.createElement("img");
+					var left = images[i].getElementsByTagName("left")[0].textContent;
+					var top = images[i].getElementsByTagName("top")[0].textContent;
+					img.src = images[i].getElementsByTagName("src")[0].textContent;
+					img.id =id;
+					img.setAttribute('style', 'width:auto; height:auto; position:absolute; left:' + left +'; top:' + top);
+					$('#main')[0].appendChild(img);
+				}
+				// image already exists, checks for changes
+				else {
+					var left = images[i].getElementsByTagName("left")[0].textContent;
+					var top = images[i].getElementsByTagName("top")[0].textContent;
+					var src = images[i].getElementsByTagName("src")[0].textContent;
+					$('#'+id).css({top: top, left: left, position:'absolute'});
+					$('#'+id).attr("src",src);
+				}
+				
+				// image boundaries
+				var rect = $('#'+id)[0].getBoundingClientRect();
+				var width = images[i].getElementsByTagName("width")[0].textContent;
+				var imgMid = rect.left + (width/2);
+				
+				// check if image has a name tag
+				if (images[i].getElementsByTagName("name").length>0){
+					updateLabel(id, images, i, imgMid, rect); 
+				}
+				// check if image has a life tag
+				if (images[i].getElementsByTagName("life").length>0){
+					updateLifeBar(id, images[i].getElementsByTagName("life")[0].textContent,imgMid, rect);
+				} 
+				else if ($('#'+id+"life").length>0){
+					var span = $('#'+id+"life")[0];
+					span.remove();
+				}
+			}
+		
+			// checking which old images need to be removed
+			// existImages contains all images active at the time
+			var existImages = $('#main')[0].childNodes;
+			
+			// iterate through all displayed images
+			for (var i=1; i<existImages.length; i++){
+				var imgid = existImages[i].id;
+				var labelid = imgid+"label";
+				// if existingImage id is not part of setup.xml
+				// delete image and label
+				if(!(ids.includes(imgid))){
+					if($("#"+labelid).length>0){
+						$("#"+labelid).remove();
+					}
+					$('#'+imgid).remove();
+				}
+				// if image exists, but name tag was removed, deletes label
+				else if ((images[i-1].getElementsByTagName("name").length==0) && $("#"+labelid).length>0){
+					$("#"+labelid).remove();
+				}
+			}
+		}
+		
+		async function demo(imgMid) {
+			updateLifeBar("Gazharagoth1", 100,imgMid);
+			await sleep(2000);
+			updateLifeBar("Gazharagoth1", 80,imgMid);
+			await sleep(2000);
+			updateLifeBar("Gazharagoth1", 55,imgMid);
+			await sleep(2000);
+			updateLifeBar("Gazharagoth1", 20,imgMid);
+			await sleep(2000);
+			updateLifeBar("Gazharagoth1", 3,imgMid);
+			await sleep(2000);
+			updateLifeBar("Gazharagoth1", 0,imgMid);
+		}
+			
+		function sleep(ms) {
+		  return new Promise(resolve => setTimeout(resolve, ms));
+		}
+		
+		function updateLabel(id, images, i, imgMid, rect) {
+			// label doesn't exist yet and needs to be created
+			if ($('#'+id+"label").length==0){
+				var name = images[i].getElementsByTagName("name")[0].textContent;
+				var label = document.createElement("div");
+				label.class="stroke";
+				label.innerText = name;
+				label.id = id+"label";
+				$('#text')[0].appendChild(label);
+				label.setAttribute(	'style', 
+									'width:auto;height:auto;position:absolute;font-size: 20px;text-align:left');
+				var labelMid = $("#"+label.id).width()/2;
+				var left = imgMid-labelMid;
+				var top = rect.top-20;
+				
+				label.setAttribute(	'style', 
+									'width:auto;height:auto;position:absolute;left:' + left +'px ;top:' + top +'px ; font-size: 20px;color: #28D11A;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;text-align:left');
+			}
+			// label already exists, checks for changes
+			else{
+				var label = $('#'+id+"label")[0];
+				var name = images[i].getElementsByTagName("name")[0].textContent;
+				label.innerText = name;
+				label.setAttribute(	'style', 
+								'width:auto;height:auto;position:absolute;font-size: 20px;text-align:left');
+				
+				var labelMid = $("#"+label.id).width()/2;
+				var left = imgMid-labelMid;
+				var top = rect.top-20;
+				
+				label.setAttribute(	'style', 
+									'width:auto;height:auto;position:absolute;left:' + left +'px ;top:' + top +'px ; font-size: 20px;color: #28D11A;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;text-align:left');
+			}	
+		}
+		
+		function updateLifeBar(id, life,imgMid, rect) {
+			var x = imgMid-25/2;
+			var y = rect.top+5;
+			// get color based on life %
+			var color = updateColor(life);
+			// check if a label exists
+			// update color of label
+			if ($('#'+id+"label").length>0){
+				label = $('#'+id+"label");
+				label.css("color", color);
+			}
+			// life bar needs to be created
+			// life not 0
+			if ($('#'+id+"life").length==0 && life>0){
+				var span = document.createElement("span");
+				span.id = id+"life";
+				var background  = document.createElement("div");
+				var bgstyles = 'border: 1px solid black; '
+						   + 'background-color: black; '
+						   + 'width: ' + 25 + 'px; '
+						   + 'height: 2px; '
+						   + 'position: absolute; '
+						   + 'top: ' + y + 'px; '
+						   + 'left: ' + x + 'px; ';
+				background.setAttribute('style', bgstyles); 
+				var lifeBar = document.createElement("div");
+				var styles = 'border: 1px solid black; '
+						   + 'background-color: ' + color + '; '
+						   + 'width: ' + (life/4) + 'px; '
+						   + 'height: 2px; '
+						   + 'position: absolute; '
+						   + 'top: ' + y + 'px; '
+						   + 'left: ' + x + 'px; ';
+				lifeBar.setAttribute('style', styles);  
+				span.appendChild(background);
+				span.appendChild(lifeBar);
+				$('#text')[0].appendChild(span);
+			}
+			// lifebar exists and needs to be updated
+			// life > 0
+			else if ($('#'+id+"life").length>0 && life>0){
+				var span = $('#'+id+"life")[0];
+				span.childNodes[1].style.backgroundColor = color;
+				span.childNodes[1].style.width = (life/4); 
+			}
+			// lifebar needs to be deleted, life = 0
+			// change source to dead
+			else if ($('#'+id+"life").length>0 && life==0){
+				var span = $('#'+id+"life")[0];
+				span.remove();
+				if ($('#'+id+"label").length>0){
+					var label = $('#'+id+"label")[0];
+					label.remove();
+				}
+				var img = $('#'+id)[0];
+				var newSrc = img.src.substring(0,img.src.indexOf("."));
+				img.src = newSrc+"_dead.png";
+			}
+			// no lifebar no life, remove name, change source to dead
+			else if ($('#'+id+"life").length==0 && life==0){
+				if ($('#'+id+"label").length>0){
+					var label = $('#'+id+"label")[0];
+					label.remove();
+				}
+				var img = $('#'+id)[0];
+				var newSrc = img.src.substring(0,img.src.indexOf("."));
+				img.src = newSrc+"_dead.png";
+			}
+		}
+		
+		// function returns color,
+		// depending on life %
+		function updateColor(life){
+			if (life<5){
+				return "#600000";
+			}
+			else if (life<25){
+				return "#C03030";
+			} else if (life < 60){
+				return "#C0C000";
+			}
+			else if (life < 100){
+				return "#60C060";
+			}
+			else{
+				return "#28D11A";
+			}
+		}
+    </script>
+	
+	<style>
+		body { width: 1920; height: 1080px; margin: 0px auto; overflow: hidden; }		
+		div { position: relative; }	
+		
+		.stroke {
+			color: "#28D11A";
+			text-shadow:
+			-1px -1px 0 #000,
+			1px -1px 0 #000,
+			-1px 1px 0 #000,
+			1px 1px 0 #000;	
+		}
+		
+	</style>
+</head>
+
+<body>
+
+	<div id="main">
+	</div>
+	
+	<div id="text">
+	</div>
+	
+</body>
+</html>

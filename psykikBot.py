@@ -3,9 +3,6 @@
 
 from ChatBot.bot import Bot
 from Commands.executor import Executor
-from Crawler import urlCrawlerScript
-from TibiaObjects.character import Character
-from Crawler import urlCrawlerScript
 
 def main():
 

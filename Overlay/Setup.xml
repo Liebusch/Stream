@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Setup>
+<time>3</time>
+<images>
+	<image>
+		<id>Ferumbras1</id>
+		<name>Ferumbras</name>
+		<life>100</life>
+		<src>images/Ferumbras.gif</src>
+		<left>200</left>
+		<top>200</top>
+		<width>64</width>
+		<height>64</height>
+	</image>
+		
+	<image>
+		<id>Gazharagoth1</id>
+		<name>Gaz'haragoth</name>
+		<life>20</life>
+		<src>images/Gaz'haragoth.gif</src>
+		<left>400</left>
+		<top>200</top>
+		<width>64</width>
+		<height>64</height>
+	</image>
+</images>
+</Setup>
+
