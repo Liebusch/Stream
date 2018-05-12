@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Setup>
-<time>3</time>
+<time>2</time>
 <images>
 	<image>
 		<id>Ferumbras1</id>
@@ -12,6 +12,8 @@
 		<top>200</top>
 		<width>64</width>
 		<height>64</height>
+		<special>bossfight</special>
+		<animation>appear</animation>
 	</image>
 		
 	<image>
@@ -24,6 +26,7 @@
 		<width>64</width>
 		<height>64</height>
 	</image>
+	
 </images>
 </Setup>
 

@@ -43,9 +43,9 @@
             xmlRequest.send();
         }
 		
-		
-		function updateImages()
-		{
+		// function updates images
+		// also calls for updates on labels and life bars
+		function updateImages(){
 			// array containing all image information in setup.xml
 			var images = xmlResponse.getElementsByTagName("image");
 			// ids in new array, used to check which displayed images
@@ -59,12 +59,41 @@
 				
 				// image doesn't exist yet and needs to be created
 				if($('#'+id).length==0){
+					// check if image has animation
+					var animation ="";
+					if (images[i].getElementsByTagName("animation").length>0){
+						var command = images[i].getElementsByTagName("animation")[0].textContent;
+						var specialTag = images[i].getElementsByTagName("special")[0].textContent;
+						if (specialTag=="bossfight"){
+							var boss = document.createElement("img");
+							var left = images[i].getElementsByTagName("left")[0].textContent;
+							var top = images[i].getElementsByTagName("top")[0].textContent;
+							boss.src = "images/BossFight.png"
+							animation = "-webkit-animation: bossfight 3s ease-in;";
+							boss.setAttribute('style', 
+										      'width:5%;' 
+											+ 'height:5%;' 
+											+ 'position:relative;' 
+											+ 'left:' + left +';' 
+											+ 'top:' + top +';'
+											+  animation);
+							playAnimation(boss,3);
+							spawning(40,40,10);
+						}
+						animation = "-webkit-animation: " + "appear" + " 1s ease-in;";
+					}
 					var img = document.createElement("img");
 					var left = images[i].getElementsByTagName("left")[0].textContent;
 					var top = images[i].getElementsByTagName("top")[0].textContent;
 					img.src = images[i].getElementsByTagName("src")[0].textContent;
 					img.id =id;
-					img.setAttribute('style', 'width:auto; height:auto; position:absolute; left:' + left +'; top:' + top);
+					img.setAttribute('style', 
+									 'width:auto;' 
+								   + 'height:auto;' 
+								   + 'position:fixed;' 
+								   + 'left:' + left +';' 
+								   + 'top:' + top +';' 
+								   +  animation);
 					$('#main')[0].appendChild(img);
 				}
 				// image already exists, checks for changes
@@ -72,7 +101,7 @@
 					var left = images[i].getElementsByTagName("left")[0].textContent;
 					var top = images[i].getElementsByTagName("top")[0].textContent;
 					var src = images[i].getElementsByTagName("src")[0].textContent;
-					$('#'+id).css({top: top, left: left, position:'absolute'});
+					$('#'+id).css({top: top, left: left, position:'fixed'});
 					$('#'+id).attr("src",src);
 				}
 				
@@ -87,12 +116,10 @@
 				}
 				// check if image has a life tag
 				if (images[i].getElementsByTagName("life").length>0){
-					updateLifeBar(id, images[i].getElementsByTagName("life")[0].textContent,imgMid, rect);
+					var life = images[i].getElementsByTagName("life")[0].textContent;
+					updateLifeBar(id, images, i, life,imgMid, rect);
 				} 
-				else if ($('#'+id+"life").length>0){
-					var span = $('#'+id+"life")[0];
-					span.remove();
-				}
+				
 			}
 		
 			// checking which old images need to be removed
@@ -103,56 +130,68 @@
 			for (var i=1; i<existImages.length; i++){
 				var imgid = existImages[i].id;
 				var labelid = imgid+"label";
+				var lifeid = imgid+"life";
 				// if existingImage id is not part of setup.xml
-				// delete image and label
+				// delete image, label and lifebar
 				if(!(ids.includes(imgid))){
 					if($("#"+labelid).length>0){
 						$("#"+labelid).remove();
 					}
+					if($("#"+lifeid).length>0){
+						$("#"+lifeid).remove();
+					}
 					$('#'+imgid).remove();
 				}
 				// if image exists, but name tag was removed, deletes label
-				else if ((images[i-1].getElementsByTagName("name").length==0) && $("#"+labelid).length>0){
+				else if ((images[i-1].getElementsByTagName("name").length==0) 
+				     && $("#"+labelid).length>0){
 					$("#"+labelid).remove();
+				}
+				// if image exists, but life tag was removed, deletes life bar
+				else if ((images[i-1].getElementsByTagName("life").length==0) 
+				     && $("#"+labelid).length>0){
+					var span = $('#'+id+"life")[0];
+					span.remove();
 				}
 			}
 		}
 		
-		async function demo(imgMid) {
-			updateLifeBar("Gazharagoth1", 100,imgMid);
-			await sleep(2000);
-			updateLifeBar("Gazharagoth1", 80,imgMid);
-			await sleep(2000);
-			updateLifeBar("Gazharagoth1", 55,imgMid);
-			await sleep(2000);
-			updateLifeBar("Gazharagoth1", 20,imgMid);
-			await sleep(2000);
-			updateLifeBar("Gazharagoth1", 3,imgMid);
-			await sleep(2000);
-			updateLifeBar("Gazharagoth1", 0,imgMid);
-		}
-			
-		function sleep(ms) {
-		  return new Promise(resolve => setTimeout(resolve, ms));
-		}
-		
+		// function updates creature names
 		function updateLabel(id, images, i, imgMid, rect) {
 			// label doesn't exist yet and needs to be created
 			if ($('#'+id+"label").length==0){
 				var name = images[i].getElementsByTagName("name")[0].textContent;
 				var label = document.createElement("div");
+				var animation ="";
+				if (images[i].getElementsByTagName("animation").length>0){
+					animation = "-webkit-animation: " 
+							   + images[i].getElementsByTagName("animation")[0].textContent 
+							   + " 1s ease-in;";
+				}
 				label.class="stroke";
 				label.innerText = name;
 				label.id = id+"label";
 				$('#text')[0].appendChild(label);
 				label.setAttribute(	'style', 
-									'width:auto;height:auto;position:absolute;font-size: 20px;text-align:left');
+									'width:auto;'
+								  + 'height:auto;'
+								  + 'position:fixed;'
+								  + 'font-size: 20px;'
+								  + 'text-align:left');
 				var labelMid = $("#"+label.id).width()/2;
 				var left = imgMid-labelMid;
 				var top = rect.top-20;
 				
 				label.setAttribute(	'style', 
-									'width:auto;height:auto;position:absolute;left:' + left +'px ;top:' + top +'px ; font-size: 20px;color: #28D11A;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;text-align:left');
+									'width:auto;'
+								  + 'height:auto;'
+								  + 'position:fixed;left:' + left +'px;'
+								  + 'top:' + top +'px;'
+								  + 'font-size: 20px;'
+								  + 'color: #28D11A;'
+								  + 'text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'
+								  + 'text-align:left;' 
+								  +  animation);
 			}
 			// label already exists, checks for changes
 			else{
@@ -160,18 +199,31 @@
 				var name = images[i].getElementsByTagName("name")[0].textContent;
 				label.innerText = name;
 				label.setAttribute(	'style', 
-								'width:auto;height:auto;position:absolute;font-size: 20px;text-align:left');
+								    'width:auto;'
+								  + 'height:auto;'
+								  + 'position:absolute;'
+								  + 'font-size: 20px;'
+								  + 'text-align:left');
 				
 				var labelMid = $("#"+label.id).width()/2;
 				var left = imgMid-labelMid;
 				var top = rect.top-20;
 				
 				label.setAttribute(	'style', 
-									'width:auto;height:auto;position:absolute;left:' + left +'px ;top:' + top +'px ; font-size: 20px;color: #28D11A;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;text-align:left');
+									'width:auto;'
+								  + 'height:auto;'
+								  + 'position:fixed;'
+								  + 'left:' + left +'px;'
+								  + 'top:' + top +'px;' 
+								  + 'font-size: 20px;'
+								  + 'color: #28D11A;'
+								  + 'text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'
+								  + 'text-align:left');
 			}	
 		}
 		
-		function updateLifeBar(id, life,imgMid, rect) {
+		// function updates creature life bars
+		function updateLifeBar(id, images, i, life,imgMid, rect) {
 			var x = imgMid-25/2;
 			var y = rect.top+5;
 			// get color based on life %
@@ -185,6 +237,11 @@
 			// life bar needs to be created
 			// life not 0
 			if ($('#'+id+"life").length==0 && life>0){
+				var animation ="";
+				if (images[i].getElementsByTagName("animation").length>0){
+					var command = images[i].getElementsByTagName("animation")[0].textContent;
+					animation = "-webkit-animation: " + command + " 1s ease-in;";
+				}
 				var span = document.createElement("span");
 				span.id = id+"life";
 				var background  = document.createElement("div");
@@ -192,18 +249,20 @@
 						   + 'background-color: black; '
 						   + 'width: ' + 25 + 'px; '
 						   + 'height: 2px; '
-						   + 'position: absolute; '
+						   + 'position: fixed; '
 						   + 'top: ' + y + 'px; '
-						   + 'left: ' + x + 'px; ';
+						   + 'left: ' + x + 'px; '
+						   + animation;
 				background.setAttribute('style', bgstyles); 
 				var lifeBar = document.createElement("div");
 				var styles = 'border: 1px solid black; '
 						   + 'background-color: ' + color + '; '
 						   + 'width: ' + (life/4) + 'px; '
 						   + 'height: 2px; '
-						   + 'position: absolute; '
+						   + 'position: fixed; '
 						   + 'top: ' + y + 'px; '
-						   + 'left: ' + x + 'px; ';
+						   + 'left: ' + x + 'px; '
+						   + animation;
 				lifeBar.setAttribute('style', styles);  
 				span.appendChild(background);
 				span.appendChild(lifeBar);
@@ -214,7 +273,11 @@
 			else if ($('#'+id+"life").length>0 && life>0){
 				var span = $('#'+id+"life")[0];
 				span.childNodes[1].style.backgroundColor = color;
-				span.childNodes[1].style.width = (life/4); 
+				span.childNodes[1].style.width = (life/4);
+				span.childNodes[1].style.top = y+'px';
+				span.childNodes[1].style.left = x+'px';
+				span.childNodes[0].style.top = y+'px';
+				span.childNodes[0].style.left = x+'px';
 			}
 			// lifebar needs to be deleted, life = 0
 			// change source to dead
@@ -259,21 +322,87 @@
 				return "#28D11A";
 			}
 		}
-    </script>
+    
+		async function playAnimation(img, time) {
+		  img.style.zIndex = 9999;
+		  $('#main')[0].appendChild(img);
+		  await sleep(time*1000);
+		  img.remove();
+		}
+		
+		function spawning(x,y, time){
+			var img = document.createElement("img");
+			img.src = "images/spawn.gif";
+			img.setAttribute('style', 
+							 'width:auto;' 
+						   + 'height:auto;' 
+						   + 'position:fixed;' 
+						   + 'left:' + x +';' 
+						   + 'top:' + y +';');
+			$('#main')[0].appendChild(img);
+			var label = document.createElement("div");
+			label.class="stroke";
+			label.innerText = time + "s";
+			$('#text')[0].appendChild(label);
+			label.setAttribute(	'style', 
+								'width:auto;'
+							  + 'height:auto;'
+							  + 'position:fixed;'
+							  + 'font-size: 20px;'
+							  + 'text-align:left');
+			var left = x+16-(label.getBoundingClientRect()).width/2;
+			var top = y+30;
+			
+			label.setAttribute(	'style', 
+								'width:auto;'
+							  + 'height:auto;'
+							  + 'position:fixed;'
+							  + 'left:' + left +'px;'
+							  + 'top:' + top +'px;'
+							  + 'font-size: 20px;'
+							  + 'color: #ffffff;'
+							  + 'text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'
+							  + 'text-align:left;');
+			
+			countdown(time, label, x);
+			kill(img, time));
+		}
+		
+		async function countdown(time, label, x){
+			for (var i=0; i<time; i++){
+			console.log("Updating");
+				label.innerText = time-(i+1) + "s";
+				label.style.left = x+16-(label.getBoundingClientRect()).width/2;
+				await sleep(1000);
+			}
+			kill(label, 0);
+			
+		}
+		
+		async function kill(img, time){
+			await sleep(time*1000);
+			img.remove();
+		}
+		
+		function sleep(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+	</script>
 	
 	<style>
 		body { width: 1920; height: 1080px; margin: 0px auto; overflow: hidden; }		
 		div { position: relative; }	
-		
-		.stroke {
-			color: "#28D11A";
-			text-shadow:
-			-1px -1px 0 #000,
-			1px -1px 0 #000,
-			-1px 1px 0 #000,
-			1px 1px 0 #000;	
+
+		@-webkit-keyframes appear {
+			0%	{opacity: 0;}
+			100% {opacity: 1;}
 		}
 		
+		@-webkit-keyframes bossfight {
+			0%	{transform:scale(1);}
+			45%	{transform:scale(4);}
+			100% {transform:scale(0);}
+		}
 	</style>
 </head>
 
