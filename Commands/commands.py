@@ -5,7 +5,8 @@ from Crawler import charCrawler
 from TibiaObjects.character import Character
 
 class Commands:
-    allowed_commands = ['create', 'lookUpCharacter']
+    allowed_commands = ['create', 'lookUpCharacter', 'share']
+
     def create (bot, user, attributes):
         vocs = ['Knight', 'Paladin', 'Druid', 'Sorcerer']
         if (attributes[0] in vocs):
@@ -33,3 +34,9 @@ class Commands:
                         ", Guild Membership: " + char.guild)
         else:
             bot.whisper(user, "Character " + name + " not found. Please check if the name is correct.")
+
+
+    def share (bot, user, attributes):
+        min = int(float(attributes[0]) * 2 /3)
+        max = int(float(attributes[0]) * 3 /2)
+        bot.whisper(user, "Your share range is " + str(min) + " - " + str(max) + ".")
